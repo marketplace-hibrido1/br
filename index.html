@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Atlivio - Atlas Vivo v0.4</title>
+    <title>Atlivio - Monetização Blindada v0.5</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-blue-900 text-white font-sans">
@@ -25,13 +25,13 @@
 
     <div id="role-selection" class="hidden min-h-screen flex items-center justify-center bg-blue-900 p-4">
         <div class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-lg text-gray-800 text-center">
-            <h2 class="text-2xl font-bold mb-4 text-blue-900">Como deseja atuar?</h2>
+            <h2 class="text-2xl font-bold mb-4 text-blue-900">Escolha sua atuação</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <button onclick="definirPerfil('cliente')" class="p-6 border-2 border-blue-100 rounded-xl hover:border-blue-500 transition text-left">
+                <button onclick="definirPerfil('cliente')" class="p-6 border-2 border-blue-100 rounded-xl hover:border-blue-500 transition text-left text-black">
                     <div class="text-4xl mb-2">🛍️</div>
                     <div class="font-bold text-lg">Cliente</div>
                 </button>
-                <button onclick="definirPerfil('prestador')" class="p-6 border-2 border-blue-100 rounded-xl hover:border-blue-500 transition text-left">
+                <button onclick="definirPerfil('prestador')" class="p-6 border-2 border-blue-100 rounded-xl hover:border-blue-500 transition text-left text-black">
                     <div class="text-4xl mb-2">🛠️</div>
                     <div class="font-bold text-lg">Prestador</div>
                 </button>
@@ -42,19 +42,22 @@
     <div id="app-container" class="hidden min-h-screen bg-gray-100 text-gray-800">
         <header class="bg-white shadow-sm p-4 flex justify-between items-center">
             <h1 class="text-xl font-bold text-blue-900">Atlivio</h1>
-            <button onclick="logout()" class="text-red-500 font-bold text-sm text-black">Sair</button>
+            <div class="flex items-center gap-3">
+                <span id="badge-pro" class="hidden bg-yellow-400 text-yellow-900 text-[10px] px-2 py-1 rounded-full font-black">PRO</span>
+                <button onclick="logout()" class="text-red-500 font-bold text-sm">Sair</button>
+            </div>
         </header>
 
         <nav class="flex bg-white border-b">
             <button onclick="switchTab('servicos')" id="tab-servicos" class="flex-1 py-3 text-sm font-bold border-b-2 border-blue-600 text-blue-600">Serviços</button>
-            <button onclick="switchTab('atlas')" id="tab-atlas" class="flex-1 py-3 text-sm font-bold border-b-2 border-transparent text-gray-500">Atlas Vivo 🌍</button>
+            <button onclick="switchTab('atlas')" id="tab-atlas" class="flex-1 py-3 text-sm font-bold border-b-2 border-transparent text-gray-500 text-black">Atlas Vivo 🌍</button>
         </nav>
 
         <main class="p-4 max-w-4xl mx-auto">
             <section id="sec-atlas" class="hidden space-y-4">
-                <div class="bg-blue-600 p-4 rounded-lg text-white">
-                    <h2 class="font-bold">Central de Missões</h2>
-                    <p class="text-xs opacity-80">Capture dados reais e ganhe recompensas.</p>
+                <div id="pro-banner" class="hidden bg-gradient-to-r from-yellow-400 to-yellow-600 p-4 rounded-lg text-white shadow-lg">
+                    <h2 class="font-bold">Upgrade para PRO 🚀</h2>
+                    <p class="text-[10px]">Veja missões 5 minutos antes de todos e ganhe mais.</p>
                 </div>
                 <div id="lista-missoes" class="grid gap-4"></div>
             </section>
@@ -64,7 +67,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, getDocs, query, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, getDocs, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDnu2aeI4ainMj3DgApxgQps0mSNFFLavs",
@@ -82,52 +85,26 @@
 
         let userProfile = null;
 
-        // --- MOTOR DE MISSÕES (Emenda Atlas v1) ---
-        window.aceitarMissao = async (missionId) => {
-            try {
-                const user = auth.currentUser;
-                // Criando a 'mission_assignment' conforme Emenda v1
-                await addDoc(collection(db, "mission_assignments"), {
-                    mission_id: missionId,
-                    profile_id: user.uid,
-                    status: "accepted", // Status inicial oficial
-                    accepted_at: serverTimestamp()
-                });
-                alert("Missão aceita! Vá ao local e prepare a prova.");
-                carregarMissoes();
-            } catch (e) { console.error(e); }
-        };
-
-        async function carregarMissoes() {
-            const snap = await getDocs(collection(db, "missoes"));
-            const container = document.getElementById('lista-missoes');
-            container.innerHTML = "";
-            
-            snap.forEach(d => {
-                const m = d.data();
-                container.innerHTML += `
-                    <div class="bg-white p-4 rounded-xl shadow-sm border">
-                        <div class="flex justify-between items-center mb-2">
-                            <span class="text-[10px] font-bold text-blue-500 uppercase tracking-widest">ID: ${d.id.substring(0,6)}</span>
-                            <span class="font-black text-green-600 text-lg">R$ ${m.recompensa}</span>
-                        </div>
-                        <h3 class="font-bold text-gray-800">${m.titulo}</h3>
-                        <p class="text-xs text-gray-500 mt-1 mb-4">${m.descricao}</p>
-                        <button onclick="aceitarMissao('${d.id}')" class="w-full bg-blue-600 text-white py-3 rounded-lg font-bold text-sm shadow-md active:scale-95 transition">Aceitar Missão</button>
-                    </div>`;
-            });
-        }
-
-        // --- NUCLEO APP ---
+        // --- MONITOR DE ESTADO COM BLINDAGEM ---
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 userProfile = await syncProfile(user);
                 document.getElementById('auth-container').classList.add('hidden');
+                
                 if (!userProfile.perfil_completo) {
                     document.getElementById('role-selection').classList.remove('hidden');
                 } else {
+                    document.getElementById('role-selection').classList.add('hidden');
                     document.getElementById('app-container').classList.remove('hidden');
-                    carregarMissoes();
+                    
+                    // Lógica de UI baseada em Monetização
+                    if(userProfile.is_pro) {
+                        document.getElementById('badge-pro').classList.remove('hidden');
+                    } else {
+                        document.getElementById('pro-banner').classList.remove('hidden');
+                    }
+                    
+                    carregarMissoesBlindadas();
                 }
             } else {
                 document.getElementById('auth-container').classList.remove('hidden');
@@ -135,11 +112,51 @@
             }
         });
 
+        // --- CARREGAMENTO COM DELAY (Regra de Monetização 2) ---
+        async function carregarMissoesBlindadas() {
+            const container = document.getElementById('lista-missoes');
+            container.innerHTML = "<p class='text-xs italic'>Sincronizando feed prioritário...</p>";
+
+            const snap = await getDocs(collection(db, "missoes"));
+            container.innerHTML = "";
+            
+            const agora = new Date();
+            const delayMinutos = 5;
+
+            snap.forEach(d => {
+                const m = d.data();
+                const dataCriacao = m.created_at?.toDate() || agora;
+                const diferencaMinutos = (agora - dataCriacao) / (1000 * 60);
+
+                // Se não for PRO e a missão tiver menos de 5 min, ela fica oculta ou com trava
+                const disponivel = userProfile.is_pro || diferencaMinutos >= delayMinutos;
+
+                if (disponivel) {
+                    container.innerHTML += `
+                        <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-[10px] font-bold text-blue-500 uppercase">RECOMPENSA</span>
+                                <span class="font-black text-green-600 text-lg">R$ ${m.recompensa}</span>
+                            </div>
+                            <h3 class="font-bold text-gray-800">${m.titulo}</h3>
+                            <button class="mt-4 w-full bg-blue-600 text-white py-3 rounded-lg font-bold text-sm">Aceitar Missão</button>
+                        </div>`;
+                } else {
+                    container.innerHTML += `
+                        <div class="bg-gray-100 p-4 rounded-xl border border-dashed border-gray-300 opacity-60">
+                            <p class="text-[10px] font-bold text-gray-400">🔒 BLOQUEADO POR PRIORIDADE PRO</p>
+                            <h3 class="font-bold text-gray-400">Missão Exclusiva</h3>
+                            <p class="text-[10px] text-gray-400">Disponível para Free em breve...</p>
+                        </div>`;
+                }
+            });
+        }
+
         async function syncProfile(user) {
             const userRef = doc(db, "usuarios", user.uid);
             const snap = await getDoc(userRef);
             if (!snap.exists()) {
-                const n = { email: user.email, is_client: true, is_provider: false, perfil_completo: false, created_at: serverTimestamp() };
+                const n = { email: user.email, is_client: true, is_provider: false, is_pro: false, perfil_completo: false, created_at: serverTimestamp() };
                 await setDoc(userRef, n); return n;
             }
             return snap.data();
@@ -149,7 +166,12 @@
         window.logout = () => signOut(auth);
         window.switchTab = (tab) => {
             document.getElementById('sec-atlas').classList.toggle('hidden', tab !== 'atlas');
-            // atualizar estilos de abas omitido por brevidade
+        };
+        window.definirPerfil = async (tipo) => {
+            const user = auth.currentUser;
+            const userRef = doc(db, "usuarios", user.uid);
+            const dados = tipo === 'prestador' ? { is_provider: true, is_client: false, perfil_completo: true } : { is_provider: false, is_client: true, perfil_completo: true };
+            await updateDoc(userRef, dados); location.reload();
         };
     </script>
 </body>
