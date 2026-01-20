@@ -3,71 +3,75 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Atlivio - Monetização Blindada v0.5</title>
+    <title>Atlivio - Vitrine Chat v0.6</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-blue-900 text-white font-sans">
 
     <div id="auth-container" class="min-h-screen flex items-center justify-center p-4">
         <div class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-md text-gray-800 text-center">
-            <h2 class="text-2xl font-bold mb-6 text-blue-900">Atlivio</h2>
+            <h2 class="text-2xl font-bold mb-6 text-blue-900 font-black italic uppercase">Atlivio</h2>
             <button onclick="loginGoogle()" class="w-full mb-4 bg-white text-gray-700 border border-gray-300 font-bold py-3 rounded-lg flex items-center justify-center hover:bg-gray-50 transition">
                 <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-5 h-5 mr-2">
                 Entrar com Google
             </button>
-            <div class="space-y-4">
-                <input type="email" id="email" placeholder="Email" class="w-full p-3 border rounded bg-gray-50 text-black outline-none focus:ring-2 focus:ring-blue-500">
-                <input type="password" id="password" placeholder="Senha" class="w-full p-3 border rounded bg-gray-50 text-black outline-none focus:ring-2 focus:ring-blue-500">
-                <button onclick="handleAuth()" id="btn-auth" class="w-full bg-blue-600 text-white font-bold py-3 rounded hover:bg-blue-700 transition">Acessar</button>
-            </div>
+            <p class="text-[10px] text-gray-400">Ao entrar você concorda com os termos de uso.</p>
         </div>
     </div>
 
-    <div id="role-selection" class="hidden min-h-screen flex items-center justify-center bg-blue-900 p-4">
-        <div class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-lg text-gray-800 text-center">
-            <h2 class="text-2xl font-bold mb-4 text-blue-900">Escolha sua atuação</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <button onclick="definirPerfil('cliente')" class="p-6 border-2 border-blue-100 rounded-xl hover:border-blue-500 transition text-left text-black">
-                    <div class="text-4xl mb-2">🛍️</div>
-                    <div class="font-bold text-lg">Cliente</div>
-                </button>
-                <button onclick="definirPerfil('prestador')" class="p-6 border-2 border-blue-100 rounded-xl hover:border-blue-500 transition text-left text-black">
-                    <div class="text-4xl mb-2">🛠️</div>
-                    <div class="font-bold text-lg">Prestador</div>
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <div id="app-container" class="hidden min-h-screen bg-gray-100 text-gray-800">
-        <header class="bg-white shadow-sm p-4 flex justify-between items-center">
-            <h1 class="text-xl font-bold text-blue-900">Atlivio</h1>
+    <div id="app-container" class="hidden min-h-screen bg-gray-100 text-gray-800 flex flex-col">
+        <header class="bg-white shadow-sm p-4 flex justify-between items-center z-10">
+            <h1 class="text-xl font-black text-blue-900 italic uppercase">Atlivio</h1>
             <div class="flex items-center gap-3">
                 <span id="badge-pro" class="hidden bg-yellow-400 text-yellow-900 text-[10px] px-2 py-1 rounded-full font-black">PRO</span>
                 <button onclick="logout()" class="text-red-500 font-bold text-sm">Sair</button>
             </div>
         </header>
 
-        <nav class="flex bg-white border-b">
-            <button onclick="switchTab('servicos')" id="tab-servicos" class="flex-1 py-3 text-sm font-bold border-b-2 border-blue-600 text-blue-600">Serviços</button>
-            <button onclick="switchTab('atlas')" id="tab-atlas" class="flex-1 py-3 text-sm font-bold border-b-2 border-transparent text-gray-500 text-black">Atlas Vivo 🌍</button>
+        <nav class="flex bg-white border-b z-10">
+            <button onclick="switchTab('atlas')" class="flex-1 py-3 text-sm font-bold border-b-2 border-blue-600 text-blue-600">Atlas Vivo 🌍</button>
+            <button onclick="switchTab('chat')" class="flex-1 py-3 text-sm font-bold border-b-2 border-transparent text-gray-500">Vitrine Chat 💬</button>
         </nav>
 
-        <main class="p-4 max-w-4xl mx-auto">
-            <section id="sec-atlas" class="hidden space-y-4">
-                <div id="pro-banner" class="hidden bg-gradient-to-r from-yellow-400 to-yellow-600 p-4 rounded-lg text-white shadow-lg">
-                    <h2 class="font-bold">Upgrade para PRO 🚀</h2>
-                    <p class="text-[10px]">Veja missões 5 minutos antes de todos e ganhe mais.</p>
-                </div>
+        <main class="flex-1 overflow-hidden relative">
+            <section id="sec-atlas" class="p-4 space-y-4 overflow-y-auto h-full">
                 <div id="lista-missoes" class="grid gap-4"></div>
+            </section>
+
+            <section id="sec-chat" class="hidden h-full flex flex-col bg-gray-200">
+                <div class="bg-white p-3 border-b flex justify-between items-center shadow-sm">
+                    <div>
+                        <p class="text-[10px] font-bold text-gray-400 uppercase">Negociação em curso</p>
+                        <h2 id="chat-target-name" class="font-bold text-sm text-blue-900">Selecione uma conversa</h2>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-[10px] font-bold text-red-500 uppercase">Expira em:</p>
+                        <span id="chat-timer" class="font-mono font-bold text-red-600">--:--</span>
+                    </div>
+                </div>
+
+                <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-3">
+                    <p class="text-center text-gray-400 text-xs mt-10 italic">Inicie uma negociação para ver as mensagens.</p>
+                </div>
+
+                <div class="bg-white p-3 border-t space-y-3">
+                    <div id="quick-actions" class="flex gap-2 overflow-x-auto pb-1">
+                        <button onclick="sendQuick('proposta')" class="whitespace-nowrap bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-[10px] font-bold border border-blue-100 italic">📄 Enviar Proposta</button>
+                        <button onclick="sendQuick('fechar')" class="whitespace-nowrap bg-green-600 text-white px-3 py-1 rounded-full text-[10px] font-bold italic">🤝 Fechar Agora</button>
+                    </div>
+                    <div class="flex gap-2">
+                        <input type="text" id="chat-input" placeholder="Digite sua mensagem..." class="flex-1 p-2 bg-gray-100 rounded-lg text-sm outline-none border focus:border-blue-500">
+                        <button onclick="sendMessage()" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold">Enviar</button>
+                    </div>
+                </div>
             </section>
         </main>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, getDocs, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, addDoc, query, where, onSnapshot, serverTimestamp, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDnu2aeI4ainMj3DgApxgQps0mSNFFLavs",
@@ -84,95 +88,91 @@
         const provider = new GoogleAuthProvider();
 
         let userProfile = null;
+        let activeConversationId = null;
 
-        // --- MONITOR DE ESTADO COM BLINDAGEM ---
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                userProfile = await syncProfile(user);
-                document.getElementById('auth-container').classList.add('hidden');
-                
-                if (!userProfile.perfil_completo) {
-                    document.getElementById('role-selection').classList.remove('hidden');
-                } else {
-                    document.getElementById('role-selection').classList.add('hidden');
-                    document.getElementById('app-container').classList.remove('hidden');
-                    
-                    // Lógica de UI baseada em Monetização
-                    if(userProfile.is_pro) {
-                        document.getElementById('badge-pro').classList.remove('hidden');
-                    } else {
-                        document.getElementById('pro-banner').classList.remove('hidden');
-                    }
-                    
-                    carregarMissoesBlindadas();
-                }
-            } else {
-                document.getElementById('auth-container').classList.remove('hidden');
-                document.getElementById('app-container').classList.add('hidden');
-            }
-        });
+        // --- VITRINE CHAT ENGINE (Emenda v1.2) ---
+        window.sendMessage = async () => {
+            const text = document.getElementById('chat-input').value;
+            if(!text || !activeConversationId) return;
 
-        // --- CARREGAMENTO COM DELAY (Regra de Monetização 2) ---
-        async function carregarMissoesBlindadas() {
-            const container = document.getElementById('lista-missoes');
-            container.innerHTML = "<p class='text-xs italic'>Sincronizando feed prioritário...</p>";
+            await addDoc(collection(db, "messages"), {
+                conversation_id: activeConversationId,
+                sender_id: auth.currentUser.uid,
+                body: text,
+                kind: 'text', // Tipo oficial conforme emenda
+                created_at: serverTimestamp()
+            });
+            document.getElementById('chat-input').value = "";
+        };
 
-            const snap = await getDocs(collection(db, "missoes"));
-            container.innerHTML = "";
-            
-            const agora = new Date();
-            const delayMinutos = 5;
+        window.sendQuick = (tipo) => {
+            const msgs = {
+                'proposta': "Gostaria de formalizar uma proposta para este serviço. Podemos alinhar os detalhes?",
+                'fechar': "Aceito os termos! Como podemos proceder com o pagamento?"
+            };
+            document.getElementById('chat-input').value = msgs[tipo];
+            window.sendMessage();
+        };
 
-            snap.forEach(d => {
-                const m = d.data();
-                const dataCriacao = m.created_at?.toDate() || agora;
-                const diferencaMinutos = (agora - dataCriacao) / (1000 * 60);
-
-                // Se não for PRO e a missão tiver menos de 5 min, ela fica oculta ou com trava
-                const disponivel = userProfile.is_pro || diferencaMinutos >= delayMinutos;
-
-                if (disponivel) {
+        // Monitor Realtime de Mensagens (Obrigatório v1.2)
+        function listenMessages(convId) {
+            const q = query(collection(db, "messages"), where("conversation_id", "==", convId), orderBy("created_at", "asc"));
+            onSnapshot(q, (snap) => {
+                const container = document.getElementById('chat-messages');
+                container.innerHTML = "";
+                snap.forEach(d => {
+                    const m = d.data();
+                    const isMe = m.sender_id === auth.currentUser.uid;
                     container.innerHTML += `
-                        <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-                            <div class="flex justify-between items-center mb-2">
-                                <span class="text-[10px] font-bold text-blue-500 uppercase">RECOMPENSA</span>
-                                <span class="font-black text-green-600 text-lg">R$ ${m.recompensa}</span>
+                        <div class="flex ${isMe ? 'justify-end' : 'justify-start'}">
+                            <div class="${isMe ? 'bg-blue-600 text-white' : 'bg-white text-gray-800'} p-3 rounded-2xl max-w-[80%] shadow-sm text-sm">
+                                ${m.body}
                             </div>
-                            <h3 class="font-bold text-gray-800">${m.titulo}</h3>
-                            <button class="mt-4 w-full bg-blue-600 text-white py-3 rounded-lg font-bold text-sm">Aceitar Missão</button>
                         </div>`;
-                } else {
-                    container.innerHTML += `
-                        <div class="bg-gray-100 p-4 rounded-xl border border-dashed border-gray-300 opacity-60">
-                            <p class="text-[10px] font-bold text-gray-400">🔒 BLOQUEADO POR PRIORIDADE PRO</p>
-                            <h3 class="font-bold text-gray-400">Missão Exclusiva</h3>
-                            <p class="text-[10px] text-gray-400">Disponível para Free em breve...</p>
-                        </div>`;
-                }
+                });
+                container.scrollTop = container.scrollHeight;
             });
         }
 
-        async function syncProfile(user) {
-            const userRef = doc(db, "usuarios", user.uid);
-            const snap = await getDoc(userRef);
-            if (!snap.exists()) {
-                const n = { email: user.email, is_client: true, is_provider: false, is_pro: false, perfil_completo: false, created_at: serverTimestamp() };
-                await setDoc(userRef, n); return n;
-            }
-            return snap.data();
+        // Timer de Urgência (Diferencial v1.2)
+        function startChatTimer(durationSeconds) {
+            let timer = durationSeconds, minutes, seconds;
+            const display = document.getElementById('chat-timer');
+            const interval = setInterval(() => {
+                minutes = parseInt(timer / 60, 10);
+                seconds = parseInt(timer % 60, 10);
+                display.textContent = `${minutes < 10 ? "0" + minutes : minutes}:${seconds < 10 ? "0" + seconds : seconds}`;
+                if (--timer < 0) {
+                    clearInterval(interval);
+                    display.textContent = "EXPIRADO";
+                    document.getElementById('chat-input').disabled = true; // Pausa atendimento conforme emenda
+                }
+            }, 1000);
         }
 
-        window.loginGoogle = async () => { try { await signInWithPopup(auth, provider); } catch (e) { console.error(e); } };
-        window.logout = () => signOut(auth);
+        // --- NAVEGAÇÃO & AUTH ---
         window.switchTab = (tab) => {
             document.getElementById('sec-atlas').classList.toggle('hidden', tab !== 'atlas');
+            document.getElementById('sec-chat').classList.toggle('hidden', tab !== 'chat');
         };
-        window.definirPerfil = async (tipo) => {
-            const user = auth.currentUser;
-            const userRef = doc(db, "usuarios", user.uid);
-            const dados = tipo === 'prestador' ? { is_provider: true, is_client: false, perfil_completo: true } : { is_provider: false, is_client: true, perfil_completo: true };
-            await updateDoc(userRef, dados); location.reload();
-        };
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                const userRef = doc(db, "usuarios", user.uid);
+                const snap = await getDoc(userRef);
+                userProfile = snap.data();
+                document.getElementById('auth-container').classList.add('hidden');
+                document.getElementById('app-container').classList.remove('hidden');
+                
+                // Simulação de carregamento de conversa ativa para teste v1.2
+                activeConversationId = "demo_conv_123"; 
+                listenMessages(activeConversationId);
+                startChatTimer(600); // 10 minutos conforme emenda
+            }
+        });
+
+        window.loginGoogle = () => signInWithPopup(auth, provider);
+        window.logout = () => signOut(auth);
     </script>
 </body>
 </html>
