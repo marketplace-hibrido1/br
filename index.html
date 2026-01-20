@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marketplace Híbrido</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-blue-900 text-white font-sans">
+    <div id="auth-container" class="min-h-screen flex items-center justify-center p-4">
+        <div class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-md text-gray-800 text-center">
+            <h2 class="text-2xl font-bold mb-6 text-blue-900">Marketplace Híbrido</h2>
+            
+            <button onclick="loginGoogle()" class="w-full mb-4 bg-white text-gray-700 border border-gray-300 font-bold py-3 rounded-lg flex items-center justify-center hover:bg-gray-50 transition">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-5 h-5 mr-2">
+                Entrar com Google
+            </button>
+
+            <div class="border-t border-gray-200 my-4"></div>
+
+            <div class="space-y-4">
+                <input type="email" id="email" placeholder="Email" class="w-full p-3 border rounded bg-white text-black">
+                <input type="password" id="password" placeholder="Senha" class="w-full p-3 border rounded bg-white text-black">
+                <button onclick="handleAuth()" class="w-full bg-blue-600 text-white font-bold py-3 rounded hover:bg-blue-700">Acessar com Email</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDnu2aeI4ainMj3DgApxgQps0mSNFFLavs",
+            authDomain: "marketplace-hibrido.firebaseapp.com",
+            projectId: "marketplace-hibrido",
+            storageBucket: "marketplace-hibrido.firebasestorage.app",
+            messagingSenderId: "1768762634630",
+            appId: "1:1768762634630:web:447545229712a4f4949216"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const provider = new GoogleAuthProvider();
+
+        window.loginGoogle = async () => {
+            try {
+                await signInWithPopup(auth, provider);
+                alert("Logado com Google!");
+            } catch (error) {
+                alert("Erro: " + error.message);
+            }
+        };
+
+        window.handleAuth = async () => {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+                alert("Logado!");
+            } catch (error) {
+                alert("Erro: " + error.code);
+            }
+        };
+    </script>
+</body>
+</html>
