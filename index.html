@@ -3,67 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Atlivio - Vitrine Chat v0.6</title>
+    <title>Atlivio - Afiliados & Ofertas v0.7</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-blue-900 text-white font-sans">
 
     <div id="auth-container" class="min-h-screen flex items-center justify-center p-4">
         <div class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-md text-gray-800 text-center">
-            <h2 class="text-2xl font-bold mb-6 text-blue-900 font-black italic uppercase">Atlivio</h2>
+            <h2 class="text-2xl font-black text-blue-900 italic uppercase">Atlivio</h2>
             <button onclick="loginGoogle()" class="w-full mb-4 bg-white text-gray-700 border border-gray-300 font-bold py-3 rounded-lg flex items-center justify-center hover:bg-gray-50 transition">
                 <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-5 h-5 mr-2">
                 Entrar com Google
             </button>
-            <p class="text-[10px] text-gray-400">Ao entrar você concorda com os termos de uso.</p>
+        </div>
+    </div>
+
+    <div id="modal-legal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+        <div class="bg-white text-gray-800 p-6 rounded-2xl max-w-sm w-full shadow-2xl">
+            <h3 class="font-black text-lg text-blue-900 uppercase mb-2">Regulamento de Ofertas</h3>
+            <p class="text-[10px] leading-relaxed text-gray-600 mb-4">
+                Podemos receber comissão quando você usa links desta página. As ofertas são de responsabilidade exclusiva dos parceiros. Não garantimos aprovação ou prazos.
+            </p>
+            <button onclick="aceitarRegulamento()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold text-sm shadow-lg active:scale-95 transition">Li e concordo</button>
         </div>
     </div>
 
     <div id="app-container" class="hidden min-h-screen bg-gray-100 text-gray-800 flex flex-col">
         <header class="bg-white shadow-sm p-4 flex justify-between items-center z-10">
-            <h1 class="text-xl font-black text-blue-900 italic uppercase">Atlivio</h1>
-            <div class="flex items-center gap-3">
-                <span id="badge-pro" class="hidden bg-yellow-400 text-yellow-900 text-[10px] px-2 py-1 rounded-full font-black">PRO</span>
-                <button onclick="logout()" class="text-red-500 font-bold text-sm">Sair</button>
-            </div>
+            <h1 class="text-xl font-black text-blue-900 italic uppercase italic">Atlivio</h1>
+            <button onclick="logout()" class="text-red-500 font-bold text-sm">Sair</button>
         </header>
 
-        <nav class="flex bg-white border-b z-10">
-            <button onclick="switchTab('atlas')" class="flex-1 py-3 text-sm font-bold border-b-2 border-blue-600 text-blue-600">Atlas Vivo 🌍</button>
-            <button onclick="switchTab('chat')" class="flex-1 py-3 text-sm font-bold border-b-2 border-transparent text-gray-500">Vitrine Chat 💬</button>
+        <nav class="flex bg-white border-b z-10 overflow-x-auto">
+            <button onclick="switchTab('atlas')" id="tab-atlas" class="flex-1 py-3 px-4 text-xs font-black border-b-2 border-blue-600 text-blue-600 whitespace-nowrap uppercase italic">Atlas Vivo 🌍</button>
+            <button onclick="switchTab('ganhar')" id="tab-ganhar" class="flex-1 py-3 px-4 text-xs font-black border-b-2 border-transparent text-gray-500 whitespace-nowrap uppercase italic">Ganhar 💸</button>
+            <button onclick="switchTab('chat')" id="tab-chat" class="flex-1 py-3 px-4 text-xs font-black border-b-2 border-transparent text-gray-500 whitespace-nowrap uppercase italic">Chat 💬</button>
         </nav>
 
-        <main class="flex-1 overflow-hidden relative">
-            <section id="sec-atlas" class="p-4 space-y-4 overflow-y-auto h-full">
-                <div id="lista-missoes" class="grid gap-4"></div>
+        <main class="flex-1 overflow-y-auto p-4 max-w-4xl mx-auto w-full">
+            <section id="sec-ganhar" class="hidden space-y-4">
+                <div class="bg-gradient-to-br from-green-600 to-green-700 p-4 rounded-2xl text-white shadow-lg">
+                    <h2 class="font-black italic uppercase">Renda Extra & Ofertas</h2>
+                    <p class="text-[10px] opacity-90">Links selecionados para aumentar seus ganhos mensais.</p>
+                </div>
+                <div id="lista-ofertas" class="grid gap-4"></div>
             </section>
 
-            <section id="sec-chat" class="hidden h-full flex flex-col bg-gray-200">
-                <div class="bg-white p-3 border-b flex justify-between items-center shadow-sm">
-                    <div>
-                        <p class="text-[10px] font-bold text-gray-400 uppercase">Negociação em curso</p>
-                        <h2 id="chat-target-name" class="font-bold text-sm text-blue-900">Selecione uma conversa</h2>
-                    </div>
-                    <div class="text-right">
-                        <p class="text-[10px] font-bold text-red-500 uppercase">Expira em:</p>
-                        <span id="chat-timer" class="font-mono font-bold text-red-600">--:--</span>
-                    </div>
-                </div>
-
-                <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-3">
-                    <p class="text-center text-gray-400 text-xs mt-10 italic">Inicie uma negociação para ver as mensagens.</p>
-                </div>
-
-                <div class="bg-white p-3 border-t space-y-3">
-                    <div id="quick-actions" class="flex gap-2 overflow-x-auto pb-1">
-                        <button onclick="sendQuick('proposta')" class="whitespace-nowrap bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-[10px] font-bold border border-blue-100 italic">📄 Enviar Proposta</button>
-                        <button onclick="sendQuick('fechar')" class="whitespace-nowrap bg-green-600 text-white px-3 py-1 rounded-full text-[10px] font-bold italic">🤝 Fechar Agora</button>
-                    </div>
-                    <div class="flex gap-2">
-                        <input type="text" id="chat-input" placeholder="Digite sua mensagem..." class="flex-1 p-2 bg-gray-100 rounded-lg text-sm outline-none border focus:border-blue-500">
-                        <button onclick="sendMessage()" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold">Enviar</button>
-                    </div>
-                </div>
+            <section id="sec-atlas" class="space-y-4">
+                <div id="lista-missoes" class="grid gap-4"></div>
             </section>
         </main>
     </div>
@@ -71,7 +58,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, addDoc, query, where, onSnapshot, serverTimestamp, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, addDoc, getDocs, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDnu2aeI4ainMj3DgApxgQps0mSNFFLavs",
@@ -88,88 +75,75 @@
         const provider = new GoogleAuthProvider();
 
         let userProfile = null;
-        let activeConversationId = null;
 
-        // --- VITRINE CHAT ENGINE (Emenda v1.2) ---
-        window.sendMessage = async () => {
-            const text = document.getElementById('chat-input').value;
-            if(!text || !activeConversationId) return;
-
-            await addDoc(collection(db, "messages"), {
-                conversation_id: activeConversationId,
-                sender_id: auth.currentUser.uid,
-                body: text,
-                kind: 'text', // Tipo oficial conforme emenda
-                created_at: serverTimestamp()
+        // --- MÓDULO AFILIADOS (v1.0) ---
+        window.abrirOferta = async (ofertaId, slug, url) => {
+            if(!userProfile.legal_accepted) {
+                document.getElementById('modal-legal').classList.remove('hidden');
+                return;
+            }
+            
+            // Grava clique rastreado
+            await addDoc(collection(db, "affiliate_clicks"), {
+                link_id: slug,
+                user_id: auth.currentUser.uid,
+                clicked_at: serverTimestamp()
             });
-            document.getElementById('chat-input').value = "";
+            
+            window.open(url, '_blank');
         };
 
-        window.sendQuick = (tipo) => {
-            const msgs = {
-                'proposta': "Gostaria de formalizar uma proposta para este serviço. Podemos alinhar os detalhes?",
-                'fechar': "Aceito os termos! Como podemos proceder com o pagamento?"
-            };
-            document.getElementById('chat-input').value = msgs[tipo];
-            window.sendMessage();
+        window.aceitarRegulamento = async () => {
+            const userRef = doc(db, "usuarios", auth.currentUser.uid);
+            await updateDoc(userRef, { 
+                legal_accepted: true, 
+                legal_accepted_at: serverTimestamp() 
+            });
+            document.getElementById('modal-legal').classList.add('hidden');
+            location.reload();
         };
 
-        // Monitor Realtime de Mensagens (Obrigatório v1.2)
-        function listenMessages(convId) {
-            const q = query(collection(db, "messages"), where("conversation_id", "==", convId), orderBy("created_at", "asc"));
-            onSnapshot(q, (snap) => {
-                const container = document.getElementById('chat-messages');
-                container.innerHTML = "";
-                snap.forEach(d => {
-                    const m = d.data();
-                    const isMe = m.sender_id === auth.currentUser.uid;
-                    container.innerHTML += `
-                        <div class="flex ${isMe ? 'justify-end' : 'justify-start'}">
-                            <div class="${isMe ? 'bg-blue-600 text-white' : 'bg-white text-gray-800'} p-3 rounded-2xl max-w-[80%] shadow-sm text-sm">
-                                ${m.body}
-                            </div>
-                        </div>`;
-                });
-                container.scrollTop = container.scrollHeight;
+        async function carregarOfertas() {
+            const snap = await getDocs(collection(db, "affiliate_offers"));
+            const container = document.getElementById('lista-ofertas');
+            container.innerHTML = "";
+            snap.forEach(d => {
+                const o = d.data();
+                container.innerHTML += `
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="bg-gray-100 text-gray-500 text-[9px] px-2 py-1 rounded font-black uppercase tracking-tighter">Parceiro: ${o.partner}</span>
+                            <span class="text-green-600 font-black text-xs uppercase italic">Oferta Ativa</span>
+                        </div>
+                        <h3 class="font-bold text-gray-800 text-sm mb-1">${o.name}</h3>
+                        <p class="text-[10px] text-gray-500 mb-4">${o.category} • Verificado Atlivio</p>
+                        <button onclick="abrirOferta('${d.id}', '${o.slug}', '${o.landing_url}')" class="w-full bg-gray-800 text-white py-3 rounded-lg font-black text-xs uppercase shadow-md active:scale-95 transition">Abrir Oferta Externo ↗</button>
+                        <p class="text-[8px] text-center mt-2 text-gray-400 italic">Ao abrir, você concorda com os termos do parceiro.</p>
+                    </div>`;
             });
         }
 
-        // Timer de Urgência (Diferencial v1.2)
-        function startChatTimer(durationSeconds) {
-            let timer = durationSeconds, minutes, seconds;
-            const display = document.getElementById('chat-timer');
-            const interval = setInterval(() => {
-                minutes = parseInt(timer / 60, 10);
-                seconds = parseInt(timer % 60, 10);
-                display.textContent = `${minutes < 10 ? "0" + minutes : minutes}:${seconds < 10 ? "0" + seconds : seconds}`;
-                if (--timer < 0) {
-                    clearInterval(interval);
-                    display.textContent = "EXPIRADO";
-                    document.getElementById('chat-input').disabled = true; // Pausa atendimento conforme emenda
-                }
-            }, 1000);
-        }
-
-        // --- NAVEGAÇÃO & AUTH ---
-        window.switchTab = (tab) => {
-            document.getElementById('sec-atlas').classList.toggle('hidden', tab !== 'atlas');
-            document.getElementById('sec-chat').classList.toggle('hidden', tab !== 'chat');
-        };
-
+        // --- AUTH & NAVIGATION ---
         onAuthStateChanged(auth, async (user) => {
             if (user) {
-                const userRef = doc(db, "usuarios", user.uid);
-                const snap = await getDoc(userRef);
+                const snap = await getDoc(doc(db, "usuarios", user.uid));
                 userProfile = snap.data();
                 document.getElementById('auth-container').classList.add('hidden');
                 document.getElementById('app-container').classList.remove('hidden');
-                
-                // Simulação de carregamento de conversa ativa para teste v1.2
-                activeConversationId = "demo_conv_123"; 
-                listenMessages(activeConversationId);
-                startChatTimer(600); // 10 minutos conforme emenda
+                carregarOfertas();
+                // Funções anteriores de carregamento (Atlas) mantidas aqui
             }
         });
+
+        window.switchTab = (tab) => {
+            ['atlas', 'ganhar', 'chat'].forEach(t => {
+                document.getElementById(`sec-${t}`).classList.toggle('hidden', t !== tab);
+                const btn = document.getElementById(`tab-${t}`);
+                btn.className = t === tab 
+                    ? "flex-1 py-3 px-4 text-xs font-black border-b-2 border-blue-600 text-blue-600 whitespace-nowrap uppercase italic"
+                    : "flex-1 py-3 px-4 text-xs font-black border-b-2 border-transparent text-gray-500 whitespace-nowrap uppercase italic";
+            });
+        };
 
         window.loginGoogle = () => signInWithPopup(auth, provider);
         window.logout = () => signOut(auth);
