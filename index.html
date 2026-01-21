@@ -3,48 +3,96 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Atlivio v1.0 - Full Audit</title>
+    <title>Atlivio v1.1 - Sistema Integrado</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-blue-900 text-white font-sans">
 
-    <div id="modal-proof" class="hidden fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-4">
-        <div class="bg-white text-gray-800 p-6 rounded-2xl max-w-sm w-full shadow-2xl">
-            <h3 class="font-black text-lg text-blue-900 uppercase">Validar Missão</h3>
-            <p id="gps-status" class="text-[9px] font-bold text-orange-500 uppercase mb-4 italic">🛰️ Verificando localização...</p>
-            
-            <div class="space-y-4">
-                <input type="file" id="input-camera" accept="image/*" capture="environment" class="hidden">
-                <button id="btn-camera" disabled onclick="document.getElementById('input-camera').click()" class="w-full opacity-50 border-2 border-dashed border-gray-200 py-8 rounded-xl flex flex-col items-center justify-center">
-                    <span class="text-3xl">📸</span>
-                    <span class="text-[10px] font-bold mt-2">AGUARDANDO GPS</span>
+    <div id="auth-container" class="min-h-screen flex items-center justify-center p-4">
+        <div class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-md text-gray-800 text-center">
+            <h2 class="text-2xl font-black text-blue-900 italic uppercase italic mb-6">Atlivio</h2>
+            <button onclick="loginGoogle()" class="w-full mb-4 bg-white text-gray-700 border border-gray-300 font-bold py-3 rounded-lg flex items-center justify-center hover:bg-gray-50 transition">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-5 h-5 mr-2">
+                Entrar com Google
+            </button>
+            <p class="text-[10px] text-gray-400">Proteção via Google Identity</p>
+        </div>
+    </div>
+
+    <div id="role-selection" class="hidden min-h-screen flex items-center justify-center bg-blue-900 p-4">
+        <div class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-lg text-gray-800 text-center">
+            <h2 class="text-2xl font-black text-blue-900 uppercase mb-4 italic">Como deseja atuar?</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
+                <button onclick="definirPerfil('cliente')" class="p-6 border-2 border-blue-100 rounded-xl hover:border-blue-600 transition">
+                    <div class="text-3xl mb-2">🛍️</div>
+                    <div class="font-black text-blue-900 uppercase italic">Cliente</div>
+                    <div class="text-[10px] text-gray-500">Contratar e realizar missões.</div>
                 </button>
-                <div id="preview-container" class="hidden"><img id="img-preview" class="w-full h-32 object-cover rounded-lg"></div>
-                <button id="btn-submit-proof" onclick="enviarProvaAuditada()" class="hidden w-full bg-green-600 text-white py-3 rounded-xl font-bold text-xs uppercase shadow-lg">Enviar com Selo de Auditoria</button>
-                <button onclick="fecharModalProof()" class="w-full text-gray-400 font-bold text-[10px] uppercase">Cancelar</button>
+                <button onclick="definirPerfil('prestador')" class="p-6 border-2 border-blue-100 rounded-xl hover:border-blue-600 transition">
+                    <div class="text-3xl mb-2">🛠️</div>
+                    <div class="font-black text-blue-900 uppercase italic">Prestador</div>
+                    <div class="text-[10px] text-gray-500">Oferecer serviços e ganhar PIX.</div>
+                </button>
             </div>
         </div>
     </div>
 
     <div id="app-container" class="hidden min-h-screen bg-gray-100 text-gray-800 flex flex-col">
-        <header class="bg-white shadow-sm p-4 flex justify-between items-center">
-            <h1 class="text-xl font-black text-blue-900 italic uppercase">Atlivio</h1>
-            <span class="text-[8px] bg-blue-100 text-blue-600 px-2 py-1 rounded font-bold uppercase">v1.0 Audit ON</span>
+        <header class="bg-white shadow-sm p-4 flex justify-between items-center z-20">
+            <div>
+                <h1 class="text-xl font-black text-blue-900 italic uppercase">Atlivio</h1>
+                <p id="tenant-label" class="text-[8px] font-bold text-gray-400 uppercase italic"></p>
+            </div>
+            <button onclick="logout()" class="text-red-500 font-black text-xs uppercase italic">Sair</button>
         </header>
 
-        <nav class="flex bg-white border-b overflow-x-auto">
-            <button onclick="switchTab('atlas')" id="tab-atlas" class="flex-1 py-3 px-4 text-[10px] font-black border-b-2 border-blue-600 text-blue-600 uppercase italic">Atlas Vivo 🌍</button>
-            <button onclick="switchTab('ganhar')" id="tab-ganhar" class="flex-1 py-3 px-4 text-[10px] font-black border-b-2 border-transparent text-gray-500 uppercase italic">Ganhar 💸</button>
+        <nav class="flex bg-white border-b z-20 overflow-x-auto no-scrollbar">
+            <button onclick="switchTab('atlas')" id="tab-atlas" class="flex-1 py-3 px-4 text-[10px] font-black border-b-2 border-blue-600 text-blue-600 uppercase italic">Atlas 🌍</button>
+            <button onclick="switchTab('ganhar')" id="tab-ganhar" class="flex-1 py-3 px-4 text-[10px] font-black border-b-2 border-transparent text-gray-400 uppercase italic">Ganhar 💸</button>
             <button onclick="switchTab('chat')" id="tab-chat" class="flex-1 py-3 px-4 text-[10px] font-black border-b-2 border-transparent text-gray-500 uppercase italic">Chat 💬</button>
+            <button onclick="switchTab('admin')" id="tab-admin" class="hidden flex-1 py-3 px-4 text-[10px] font-black border-b-2 border-transparent text-red-600 uppercase italic">Gestão 🛡️</button>
         </nav>
 
         <main class="flex-1 overflow-y-auto p-4 max-w-4xl mx-auto w-full">
             <section id="sec-atlas" class="space-y-4">
                 <div id="lista-missoes" class="grid gap-4"></div>
             </section>
-            <section id="sec-ganhar" class="hidden space-y-4"><div id="lista-ofertas" class="grid gap-4"></div></section>
-            <section id="sec-chat" class="hidden space-y-4"><div id="chat-messages" class="grid gap-4"></div></section>
+
+            <section id="sec-ganhar" class="hidden space-y-4">
+                <div id="lista-ofertas" class="grid gap-4"></div>
+            </section>
+
+            <section id="sec-chat" class="hidden space-y-4">
+                <div id="escrow-lock" class="bg-yellow-50 border-2 border-dashed border-yellow-200 p-8 rounded-2xl text-center">
+                    <h2 class="font-black text-yellow-800 uppercase italic">Acesso Restrito</h2>
+                    <p class="text-[10px] text-yellow-700 mt-2">O chat requer Escrow autorizado para sua segurança.</p>
+                </div>
+            </section>
+
+            <section id="sec-admin" class="hidden space-y-6">
+                <div class="bg-red-600 p-4 rounded-xl text-white">
+                    <h2 class="font-black uppercase italic text-sm">Painel do Fundador</h2>
+                    <p class="text-[9px] opacity-80">Controle total de auditoria e monetização.</p>
+                </div>
+                <div class="space-y-4">
+                    <h3 class="text-xs font-black uppercase text-gray-500">Auditoria de Campo</h3>
+                    <div id="admin-lista-auditoria" class="grid gap-4"></div>
+                </div>
+            </section>
         </main>
+    </div>
+
+    <div id="modal-proof" class="hidden fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-4 text-center">
+        <div class="bg-white p-6 rounded-2xl w-full max-w-xs shadow-2xl">
+            <p id="gps-status" class="text-[9px] font-black text-orange-500 uppercase mb-4 italic">🛰️ Validando GPS...</p>
+            <input type="file" id="input-camera" accept="image/*" capture="environment" class="hidden">
+            <button id="btn-camera" disabled onclick="document.getElementById('input-camera').click()" class="w-full border-2 border-dashed border-gray-200 py-10 rounded-xl text-gray-400 flex flex-col items-center">
+                <span class="text-4xl">📸</span>
+                <span class="text-[10px] font-black mt-2 uppercase">Capturar Prova</span>
+            </button>
+            <button id="btn-submit-proof" onclick="enviarProvaAuditada()" class="hidden mt-4 w-full bg-blue-600 text-white py-3 rounded-xl font-black text-xs uppercase shadow-lg">Finalizar e Enviar</button>
+            <button onclick="document.getElementById('modal-proof').classList.add('hidden')" class="mt-4 text-gray-400 text-[10px] font-bold uppercase underline">Cancelar</button>
+        </div>
     </div>
 
     <script type="module">
@@ -68,71 +116,69 @@
         const storage = getStorage(app);
         const provider = new GoogleAuthProvider();
 
-        let activeAssignmentId = null;
-        let currentCoords = null;
+        let userProfile = null;
+        const DEFAULT_TENANT = "atlivio_beta_01";
 
-        // --- MOTOR DE AUDITORIA (Seção 3 Enterprise + Proof-of-Capture) ---
-        window.prepararProvaAuditada = (assignmentId) => {
-            activeAssignmentId = assignmentId;
-            document.getElementById('modal-proof').classList.remove('hidden');
-            
-            // Captura de GPS obrigatória para Auditoria
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition((pos) => {
-                    currentCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-                    document.getElementById('gps-status').innerText = "✅ Localização Validada";
-                    document.getElementById('gps-status').className = "text-[9px] font-bold text-green-500 uppercase mb-4";
-                    document.getElementById('btn-camera').disabled = false;
-                    document.getElementById('btn-camera').className = "w-full border-2 border-dashed border-blue-400 py-8 rounded-xl flex flex-col items-center justify-center bg-blue-50";
-                }, () => { alert("GPS necessário para validar a missão."); });
+        // --- NÚCLEO DE ADMIN (Como você acessa) ---
+        // Você deve ir ao Firebase Console -> usuarios -> seu UID e adicionar o campo "role": "admin"
+        async function checkAdmin(profile) {
+            if(profile.role === 'admin') {
+                document.getElementById('tab-admin').classList.remove('hidden');
+                carregarAdminAudit();
             }
-        };
+        }
 
-        window.enviarProvaAuditada = async () => {
-            const file = document.getElementById('input-camera').files[0];
-            if(!file || !currentCoords) return;
-
-            const btn = document.getElementById('btn-submit-proof');
-            btn.innerText = "AUDITANDO..."; btn.disabled = true;
-
-            try {
-                // 1. Upload e Prova de Captura
-                const storageRef = ref(storage, `audit/${activeAssignmentId}/${Date.now()}.jpg`);
-                await uploadBytes(storageRef, file);
-                const photoUrl = await getDownloadURL(storageRef);
-
-                // 2. Registro de Auditoria Imutável
-                await addDoc(collection(db, "audit_events"), {
-                    actor_id: auth.currentUser.uid,
-                    entity_type: "mission_proof",
-                    entity_id: activeAssignmentId,
-                    action: "upload_with_gps",
-                    metadata: { coords: currentCoords, ua: navigator.userAgent },
-                    created_at: serverTimestamp() // SSOT: Fonte Única da Verdade
-                });
-
-                // 3. Finalização da Missão
-                await updateDoc(doc(db, "mission_assignments", activeAssignmentId), {
-                    status: "submitted",
-                    submitted_at: serverTimestamp(),
-                    location_capture: currentCoords
-                });
-
-                alert("Missão enviada e auditada com sucesso!");
-                location.reload();
-            } catch (e) { console.error(e); }
-        };
-
-        // ... [RESTANTE DAS FUNÇÕES DE AUTH, SYNC E ABAS MANTIDAS INTEGRALMENTE] ...
+        // --- AUTH & SYNC ---
         onAuthStateChanged(auth, async (user) => {
             if (user) {
+                const snap = await getDoc(doc(db, "usuarios", user.uid));
+                userProfile = snap.data();
+                
+                if(!snap.exists()) {
+                    userProfile = { email: user.email, tenant_id: DEFAULT_TENANT, perfil_completo: false, is_pro: false, created_at: serverTimestamp() };
+                    await setDoc(doc(db, "usuarios", user.uid), userProfile);
+                }
+
                 document.getElementById('auth-container').classList.add('hidden');
-                document.getElementById('app-container').classList.remove('hidden');
-                carregarMissoes();
+                if(!userProfile.perfil_completo) {
+                    document.getElementById('role-selection').classList.remove('hidden');
+                } else {
+                    document.getElementById('role-selection').classList.add('hidden');
+                    document.getElementById('app-container').classList.remove('hidden');
+                    document.getElementById('tenant-label').innerText = `Rede: ${DEFAULT_TENANT}`;
+                    checkAdmin(userProfile);
+                    carregarItemsAtlas();
+                }
+            } else {
+                document.getElementById('auth-container').classList.remove('hidden');
+                document.getElementById('app-container').classList.add('hidden');
             }
         });
 
-        async function carregarMissoes() {
+        // --- FUNÇÕES DE INTERFACE ---
+        window.switchTab = (tab) => {
+            ['atlas', 'ganhar', 'chat', 'admin'].forEach(t => {
+                const sec = document.getElementById(`sec-${t}`);
+                if(sec) sec.classList.toggle('hidden', t !== tab);
+                const btn = document.getElementById(`tab-${t}`);
+                if(btn) btn.className = t === tab ? "flex-1 py-3 px-4 text-[10px] font-black border-b-2 border-blue-600 text-blue-600 uppercase italic" : "flex-1 py-3 px-4 text-[10px] font-black border-b-2 border-transparent text-gray-500 uppercase italic";
+            });
+        };
+
+        window.loginGoogle = () => signInWithPopup(auth, provider);
+        window.logout = () => signOut(auth);
+        window.definirPerfil = async (tipo) => {
+            const user = auth.currentUser;
+            await updateDoc(doc(db, "usuarios", user.uid), { 
+                is_provider: tipo === 'prestador', 
+                is_client: tipo === 'cliente', 
+                perfil_completo: true 
+            });
+            location.reload();
+        };
+
+        // --- CARREGAMENTO DE DADOS (ATLAS) ---
+        async function carregarItemsAtlas() {
             const snap = await getDocs(collection(db, "missoes"));
             const container = document.getElementById('lista-missoes');
             container.innerHTML = "";
@@ -140,12 +186,43 @@
                 const m = d.data();
                 container.innerHTML += `
                     <div class="bg-white p-4 rounded-xl border-l-4 border-blue-600 shadow-sm">
-                        <h3 class="font-bold text-gray-800 text-sm">${m.titulo}</h3>
-                        <p class="text-[9px] text-gray-400 mt-1 uppercase font-bold">Recompensa: R$ ${m.recompensa}</p>
-                        <button onclick="prepararProvaAuditada('${d.id}')" class="mt-4 w-full bg-blue-600 text-white py-2 rounded font-black text-[10px] uppercase">Realizar Missão 📸</button>
+                        <div class="flex justify-between items-center mb-1">
+                            <h3 class="font-black text-gray-800 text-xs uppercase italic">${m.titulo}</h3>
+                            <span class="text-green-600 font-black text-xs italic">R$ ${m.recompensa}</span>
+                        </div>
+                        <p class="text-[9px] text-gray-500 mb-4 leading-tight">${m.descricao}</p>
+                        <button onclick="prepararMissao('${d.id}')" class="w-full bg-blue-900 text-white py-2 rounded-lg font-black text-[10px] uppercase italic active:scale-95 transition">Ver Detalhes</button>
                     </div>`;
             });
         }
+
+        // --- SISTEMA ADMIN (AUDITORIA) ---
+        async function carregarAdminAudit() {
+            const q = query(collection(db, "mission_assignments"), where("status", "==", "submitted"));
+            const snap = await getDocs(q);
+            const container = document.getElementById('admin-lista-auditoria');
+            container.innerHTML = snap.empty ? "<p class='text-gray-400 text-[10px]'>Nenhuma missão pendente de auditoria.</p>" : "";
+            
+            snap.forEach(async (d) => {
+                const ass = d.data();
+                container.innerHTML += `
+                    <div class="bg-white p-3 rounded-lg border shadow-sm">
+                        <p class="text-[9px] font-bold">MISSÃO: ${ass.mission_id}</p>
+                        <div class="flex gap-2 mt-2">
+                            <button onclick="aprovarMissao('${d.id}')" class="flex-1 bg-green-600 text-white text-[8px] font-black p-2 rounded uppercase italic">Aprovar ✅</button>
+                            <button class="flex-1 bg-red-100 text-red-600 text-[8px] font-black p-2 rounded uppercase italic text-black">Rejeitar ❌</button>
+                        </div>
+                    </div>`;
+            });
+        }
+
+        window.aprovarMissao = async (id) => {
+            if(!confirm("Confirmar aprovação?")) return;
+            await updateDoc(doc(db, "mission_assignments", id), { status: "approved", approved_at: serverTimestamp() });
+            alert("Sucesso!");
+            carregarAdminAudit();
+        };
+
     </script>
 </body>
 </html>
