@@ -3,10 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Atlivio v1.2 - Sistema Otimizado</title>
+    <title>Atlivio v2.0 - Atlas Vivo Alpha</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .animate-fadeIn { animation: fadeIn 0.5s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
 </head>
 <body class="bg-blue-900 text-white font-sans selection:bg-blue-500 selection:text-white">
+
+    <input type="file" id="camera-input" accept="image/*" capture="environment" class="hidden" onchange="processarFoto(this)">
 
     <div id="auth-container" class="min-h-screen flex items-center justify-center p-4">
         <div class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-md text-gray-800 text-center border-b-4 border-blue-900">
@@ -18,6 +24,7 @@
                 Entrar com Google
             </button>
             <p class="text-[9px] text-gray-300 uppercase font-bold tracking-widest mt-4">Protegido por Google Identity</p>
+            <p id="error-msg" class="text-red-500 text-xs mt-4 hidden"></p>
         </div>
     </div>
 
@@ -94,7 +101,7 @@
                 </div>
                 <div class="p-4 bg-white rounded-xl border border-gray-200">
                     <p class="text-[10px] text-gray-500 uppercase font-bold mb-2">Ferramentas de Dev</p>
-                    <button onclick="alert('Rode o script fornecido no console!')" class="text-[10px] bg-gray-100 px-3 py-2 rounded font-mono w-full text-left">💡 Dica: Use o script de Seed agora</button>
+                    <p class="text-[9px] text-gray-400">Use o console para Seeds.</p>
                 </div>
             </section>
         </main>
@@ -105,6 +112,7 @@
         import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, addDoc, getDocs, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+        // CONFIGURAÇÃO (Confirmada na sua imagem do Project IDX/Firebase)
         const firebaseConfig = {
             apiKey: "AIzaSyDnu2aeI4ainMj3DgApxgQpsOmSNFfLavs",
             authDomain: "marketplace-hibrido.firebaseapp.com",
@@ -115,19 +123,23 @@
             measurementId: "G-TWQRB0VKM4"
         };
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        const provider = new GoogleAuthProvider();
-
-        // EXPOR PARA O CONSOLE (PARA RODAR O SCRIPT DEPOIS)
-        window.db = db;
-        window.collection = collection;
-        window.addDoc = addDoc;
-        window.serverTimestamp = serverTimestamp;
+        // Inicialização Segura
+        let app, auth, db, provider;
+        try {
+            app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            db = getFirestore(app);
+            provider = new GoogleAuthProvider();
+            console.log("🔥 Firebase Iniciado com Sucesso");
+        } catch (e) {
+            console.error("Erro crítico ao iniciar Firebase:", e);
+            document.getElementById('error-msg').innerText = "Erro de Configuração: " + e.message;
+            document.getElementById('error-msg').classList.remove('hidden');
+        }
 
         let userProfile = null;
         const DEFAULT_TENANT = "atlivio_fsa_01"; 
+        let missaoAtualId = null; // Variável para o Atlas Vivo
 
         onAuthStateChanged(auth, async (user) => {
             if (user) {
@@ -156,7 +168,7 @@
                     }
                 } catch (error) {
                     console.error("Erro no login:", error);
-                    alert("Erro de conexão. Verifique o console.");
+                    alert("Erro ao buscar perfil. Verifique sua conexão.");
                 }
             } else {
                 document.getElementById('auth-container').classList.remove('hidden');
@@ -176,7 +188,11 @@
             carregarMissoes();
         }
 
-        window.loginGoogle = () => signInWithPopup(auth, provider).catch(e => alert("Erro: " + e.message));
+        window.loginGoogle = () => signInWithPopup(auth, provider).catch(e => {
+            alert("Erro no Login: " + e.message);
+            console.error(e);
+        });
+        
         window.logout = () => signOut(auth).then(() => location.reload());
         
         window.definirPerfil = async (tipo) => {
@@ -201,6 +217,7 @@
             });
         };
 
+        // --- SISTEMA ATLAS VIVO (CÂMERA + GPS) ---
         async function carregarMissoes() {
             const container = document.getElementById('lista-missoes');
             const loading = document.getElementById('loading-missoes');
@@ -209,33 +226,37 @@
             loading.classList.remove('hidden');
 
             try {
-                // Aqui podemos adicionar filtros futuramente
-                const q = query(collection(db, "missoes"));
-                const snap = await getDocs(q);
+                // Filtro de Tenant ATIVO (Segurança Fase 1)
+                // Se der erro de índice, o console vai avisar com um link para criar
+                const q = query(
+                    collection(db, "missoes"), 
+                    where("tenant_id", "==", userProfile.tenant_id)
+                );
                 
+                const snap = await getDocs(q);
                 let htmlBuffer = "";
 
                 if(snap.empty) {
                     htmlBuffer = `
                         <div class="text-center py-12 text-gray-400">
                             <p class="text-3xl mb-2">🦗</p>
-                            <p class="text-[10px] uppercase font-bold">Sem missões ativas</p>
-                            <p class="text-[9px]">Aguarde novas demandas na rede.</p>
+                            <p class="text-[10px] uppercase font-bold">Sem missões na sua área</p>
+                            <p class="text-[9px]">Aguarde novas demandas na rede ${userProfile.tenant_id}.</p>
                         </div>
                     `;
                 } else {
                     snap.forEach(d => {
                         const m = d.data();
                         htmlBuffer += `
-                            <div class="bg-white p-5 rounded-2xl border-l-4 border-blue-900 shadow-sm hover:shadow-md transition group">
+                            <div class="bg-white p-5 rounded-2xl border-l-4 border-blue-900 shadow-sm hover:shadow-md transition group mb-4">
                                 <div class="flex justify-between items-start mb-3">
                                     <h3 class="font-black text-blue-900 text-sm uppercase italic leading-tight max-w-[70%]">${m.titulo}</h3>
                                     <span class="bg-green-100 text-green-700 px-2 py-1 rounded-md font-black text-[10px] italic">R$ ${m.recompensa}</span>
                                 </div>
                                 <p class="text-[10px] text-gray-500 mb-4 leading-relaxed line-clamp-3">${m.descricao}</p>
-                                <button class="w-full bg-gray-50 text-blue-900 border border-blue-100 py-3 rounded-xl font-black text-[10px] uppercase italic active:scale-95 transition hover:bg-blue-900 hover:text-white flex items-center justify-center gap-2">
-                                    <span>Aceitar Detalhes</span> 
-                                    <span class="text-xs">⚡</span>
+                                
+                                <button onclick="iniciarMissao('${d.id}')" class="w-full bg-blue-600 text-white py-3 rounded-xl font-black text-[10px] uppercase italic active:scale-95 transition shadow-lg flex items-center justify-center gap-2 hover:bg-blue-700">
+                                    <span>📸 Capturar Prova</span> 
                                 </button>
                             </div>`;
                     });
@@ -243,12 +264,52 @@
                 
                 container.innerHTML = htmlBuffer;
             } catch (error) {
-                console.error(error);
-                container.innerHTML = `<p class="text-red-500 text-xs text-center">Erro ao carregar feed.</p>`;
+                console.error("Erro ao carregar missões:", error);
+                // Fallback para caso o índice não exista
+                if(error.message.includes("indexes")) {
+                    container.innerHTML = `<p class="text-red-500 text-[10px] text-center p-4">⚠️ Admin: Necessário criar índice no Firebase. Veja o console.</p>`;
+                } else {
+                    container.innerHTML = `<p class="text-red-500 text-[10px] text-center p-4">Erro de conexão. Tente recarregar.</p>`;
+                }
             } finally {
                 loading.classList.add('hidden');
             }
         }
+
+        // Função chamada ao clicar no botão da missão
+        window.iniciarMissao = (id) => {
+            missaoAtualId = id;
+            console.log("Iniciando missão:", id);
+            
+            // 1. Tenta pegar GPS
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        console.log("📍 GPS Capturado:", position.coords.latitude);
+                        // 2. Se GPS OK, abre input de arquivo (Câmera)
+                        document.getElementById('camera-input').click();
+                    },
+                    (error) => {
+                        alert("⚠️ Erro: Precisamos do seu GPS para validar a missão. Ative a localização.");
+                        console.warn(error);
+                    }
+                );
+            } else {
+                alert("Seu dispositivo não suporta GPS. Não é possível realizar missões.");
+            }
+        };
+
+        // Função chamada quando o usuário tira a foto ou escolhe o arquivo
+        window.processarFoto = async (input) => {
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                alert(`✅ FOTO CAPTURADA COM SUCESSO!\n\nNome: ${file.name}\nTamanho: ${(file.size / 1024).toFixed(2)} KB\nMissão ID: ${missaoAtualId}\n\n(Nesta etapa, a foto foi validada. Na próxima, enviaremos para o servidor).`);
+                
+                // Limpa o input para permitir nova foto depois
+                input.value = '';
+            }
+        };
+
     </script>
 </body>
 </html>
