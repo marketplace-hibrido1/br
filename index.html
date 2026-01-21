@@ -3,11 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Atlivio v2.0 - Atlas Vivo Alpha</title>
+    <title>Atlivio v2.1 - Atlas Vivo Beta</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .animate-fadeIn { animation: fadeIn 0.5s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        /* Loader de Upload */
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body class="bg-blue-900 text-white font-sans selection:bg-blue-500 selection:text-white">
@@ -32,77 +35,59 @@
         <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-lg text-gray-800 text-center">
             <h2 class="text-2xl font-black text-blue-900 uppercase mb-2 italic">Identidade</h2>
             <p class="text-gray-400 text-xs font-bold uppercase mb-8">Como você deseja atuar hoje?</p>
-            
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
-                <button onclick="definirPerfil('cliente')" class="p-6 border-2 border-gray-50 rounded-2xl hover:border-blue-600 hover:bg-blue-50 transition group relative overflow-hidden">
-                    <div class="text-4xl mb-3 group-hover:scale-110 transition">🛍️</div>
-                    <div class="font-black text-blue-900 uppercase italic group-hover:text-blue-700">Cliente</div>
-                    <div class="text-[10px] text-gray-500 font-medium mt-1">Contratar serviços e realizar demandas.</div>
+                <button onclick="definirPerfil('cliente')" class="p-6 border-2 border-gray-50 rounded-2xl hover:border-blue-600 hover:bg-blue-50 transition group">
+                    <div class="text-4xl mb-3">🛍️</div>
+                    <div class="font-black text-blue-900 uppercase italic">Cliente</div>
                 </button>
                 <button onclick="definirPerfil('prestador')" class="p-6 border-2 border-gray-50 rounded-2xl hover:border-blue-600 hover:bg-blue-50 transition group">
-                    <div class="text-4xl mb-3 group-hover:scale-110 transition">🛠️</div>
-                    <div class="font-black text-blue-900 uppercase italic group-hover:text-blue-700">Prestador</div>
-                    <div class="text-[10px] text-gray-500 font-medium mt-1">Executar missões e receber pagamentos.</div>
+                    <div class="text-4xl mb-3">🛠️</div>
+                    <div class="font-black text-blue-900 uppercase italic">Prestador</div>
                 </button>
             </div>
         </div>
+    </div>
+
+    <div id="upload-overlay" class="hidden fixed inset-0 bg-blue-900 bg-opacity-90 z-50 flex flex-col items-center justify-center text-white">
+        <div class="loader mb-4"></div>
+        <h3 class="font-black uppercase italic text-xl animate-pulse">Enviando Prova...</h3>
+        <p class="text-xs text-blue-200 mt-2">Não feche o navegador.</p>
     </div>
 
     <div id="app-container" class="hidden min-h-screen bg-gray-50 text-gray-800 flex flex-col">
         <header class="bg-white shadow-sm p-4 flex justify-between items-center z-30 sticky top-0">
             <div>
                 <h1 class="text-xl font-black text-blue-900 italic uppercase tracking-tight">Atlivio</h1>
-                <div class="flex items-center gap-2">
-                    <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                    <p id="tenant-label" class="text-[8px] font-bold text-gray-400 uppercase italic">Carregando...</p>
-                </div>
+                <p id="tenant-label" class="text-[8px] font-bold text-gray-400 uppercase italic">Carregando...</p>
             </div>
-            <div class="flex items-center gap-3">
-                <button onclick="logout()" class="text-red-400 hover:text-red-600 font-black text-[10px] uppercase italic border border-red-100 px-3 py-1 rounded-lg transition">Sair</button>
-            </div>
+            <button onclick="logout()" class="text-red-400 font-black text-[10px] uppercase italic border border-red-100 px-3 py-1 rounded-lg">Sair</button>
         </header>
 
-        <nav class="flex bg-white border-b border-gray-100 z-20 overflow-x-auto no-scrollbar shadow-[0_2px_10px_-5px_rgba(0,0,0,0.1)]">
-            <button onclick="switchTab('atlas')" id="tab-atlas" class="flex-1 py-4 px-4 text-[10px] font-black border-b-2 border-blue-600 text-blue-600 uppercase italic transition-colors">Atlas 🌍</button>
-            <button onclick="switchTab('ganhar')" id="tab-ganhar" class="flex-1 py-4 px-4 text-[10px] font-black border-b-2 border-transparent text-gray-400 hover:text-gray-600 uppercase italic transition-colors">Ganhar 💸</button>
-            <button onclick="switchTab('chat')" id="tab-chat" class="flex-1 py-4 px-4 text-[10px] font-black border-b-2 border-transparent text-gray-400 hover:text-gray-600 uppercase italic transition-colors">Chat 💬</button>
-            <button onclick="switchTab('admin')" id="tab-admin" class="hidden flex-1 py-4 px-4 text-[10px] font-black border-b-2 border-transparent text-red-400 hover:text-red-600 uppercase italic transition-colors">Gestão 🛡️</button>
+        <nav class="flex bg-white border-b border-gray-100 z-20 overflow-x-auto no-scrollbar shadow-sm">
+            <button onclick="switchTab('atlas')" id="tab-atlas" class="flex-1 py-4 px-4 text-[10px] font-black border-b-2 border-blue-600 text-blue-600 uppercase italic">Atlas 🌍</button>
+            <button onclick="switchTab('ganhar')" id="tab-ganhar" class="flex-1 py-4 px-4 text-[10px] font-black border-b-2 border-transparent text-gray-400 uppercase italic">Ganhar 💸</button>
+            <button onclick="switchTab('chat')" id="tab-chat" class="flex-1 py-4 px-4 text-[10px] font-black border-b-2 border-transparent text-gray-400 uppercase italic">Chat 💬</button>
+            <button onclick="switchTab('admin')" id="tab-admin" class="hidden flex-1 py-4 px-4 text-[10px] font-black border-b-2 border-transparent text-red-400 uppercase italic">Gestão 🛡️</button>
         </nav>
 
         <main class="flex-1 overflow-y-auto p-4 max-w-2xl mx-auto w-full pb-24">
-            
             <section id="sec-atlas" class="space-y-4 animate-fadeIn">
                 <div id="loading-missoes" class="hidden text-center py-8">
-                    <div class="inline-block w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
-                    <p class="text-[10px] text-gray-400 font-bold uppercase mt-2">Buscando missões...</p>
+                    <p class="text-[10px] text-gray-400 font-bold uppercase">Buscando missões...</p>
                 </div>
                 <div id="lista-missoes" class="grid gap-4"></div>
             </section>
-
-            <section id="sec-ganhar" class="hidden space-y-4 animate-fadeIn">
-                <div class="text-center py-10 opacity-50">
-                    <p class="text-4xl mb-2">💸</p>
-                    <p class="text-xs font-bold text-gray-400 uppercase">Nenhuma oferta ativa</p>
-                </div>
+            
+            <section id="sec-ganhar" class="hidden space-y-4 animate-fadeIn text-center py-10 opacity-50">
+                <p class="text-4xl mb-2">💸</p><p class="text-xs font-bold text-gray-400 uppercase">Sem ofertas</p>
             </section>
-
-            <section id="sec-chat" class="hidden animate-fadeIn">
-                <div class="bg-yellow-50 border-2 border-dashed border-yellow-200 p-8 rounded-2xl text-center">
-                    <h2 class="font-black text-yellow-800 uppercase italic text-lg">Escrow Necessário</h2>
-                    <p class="text-[10px] text-yellow-700 mt-2 font-medium">Inicie uma transação segura para liberar o canal de comunicação.</p>
-                </div>
+            
+            <section id="sec-chat" class="hidden animate-fadeIn text-center py-10 opacity-50">
+                <p class="text-4xl mb-2">💬</p><p class="text-xs font-bold text-gray-400 uppercase">Chat Indisponível</p>
             </section>
 
             <section id="sec-admin" class="hidden space-y-6 text-black animate-fadeIn">
-                <div class="bg-gradient-to-r from-red-600 to-red-800 p-6 rounded-2xl text-white shadow-lg relative overflow-hidden">
-                    <div class="absolute top-0 right-0 p-4 opacity-10 text-6xl">🛡️</div>
-                    <h2 class="font-black uppercase italic text-sm relative z-10">Painel do Fundador</h2>
-                    <p class="text-[9px] opacity-80 mt-1 relative z-10">Controle total da rede e auditoria.</p>
-                </div>
-                <div class="p-4 bg-white rounded-xl border border-gray-200">
-                    <p class="text-[10px] text-gray-500 uppercase font-bold mb-2">Ferramentas de Dev</p>
-                    <p class="text-[9px] text-gray-400">Use o console para Seeds.</p>
-                </div>
+                <div class="bg-red-600 p-6 rounded-2xl text-white shadow-lg"><h2 class="font-black uppercase italic text-sm">Painel do Fundador</h2></div>
             </section>
         </main>
     </div>
@@ -111,8 +96,9 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, addDoc, getDocs, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        // IMPORTANDO STORAGE (NOVO)
+        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
-        // CONFIGURAÇÃO (Confirmada na sua imagem do Project IDX/Firebase)
         const firebaseConfig = {
             apiKey: "AIzaSyDnu2aeI4ainMj3DgApxgQpsOmSNFfLavs",
             authDomain: "marketplace-hibrido.firebaseapp.com",
@@ -123,53 +109,38 @@
             measurementId: "G-TWQRB0VKM4"
         };
 
-        // Inicialização Segura
-        let app, auth, db, provider;
+        let app, auth, db, storage, provider;
+
         try {
             app = initializeApp(firebaseConfig);
             auth = getAuth(app);
             db = getFirestore(app);
+            storage = getStorage(app); // INICIALIZANDO STORAGE
             provider = new GoogleAuthProvider();
-            console.log("🔥 Firebase Iniciado com Sucesso");
+            console.log("🔥 Firebase + Storage Online");
         } catch (e) {
-            console.error("Erro crítico ao iniciar Firebase:", e);
-            document.getElementById('error-msg').innerText = "Erro de Configuração: " + e.message;
+            console.error(e);
+            document.getElementById('error-msg').innerText = "Erro: " + e.message;
             document.getElementById('error-msg').classList.remove('hidden');
         }
 
         let userProfile = null;
         const DEFAULT_TENANT = "atlivio_fsa_01"; 
-        let missaoAtualId = null; // Variável para o Atlas Vivo
+        let missaoAtualId = null; 
 
+        // AUTENTICAÇÃO
         onAuthStateChanged(auth, async (user) => {
             if (user) {
-                try {
-                    const snap = await getDoc(doc(db, "usuarios", user.uid));
-                    
-                    if(!snap.exists()) {
-                        userProfile = { 
-                            email: user.email, 
-                            tenant_id: DEFAULT_TENANT, 
-                            perfil_completo: false, 
-                            role: 'user', 
-                            created_at: serverTimestamp() 
-                        };
-                        await setDoc(doc(db, "usuarios", user.uid), userProfile);
-                    } else {
-                        userProfile = snap.data();
-                    }
-
-                    document.getElementById('auth-container').classList.add('hidden');
-                    
-                    if(!userProfile.perfil_completo) {
-                        document.getElementById('role-selection').classList.remove('hidden');
-                    } else {
-                        iniciarApp();
-                    }
-                } catch (error) {
-                    console.error("Erro no login:", error);
-                    alert("Erro ao buscar perfil. Verifique sua conexão.");
+                const snap = await getDoc(doc(db, "usuarios", user.uid));
+                if(!snap.exists()) {
+                    userProfile = { email: user.email, tenant_id: DEFAULT_TENANT, perfil_completo: false, role: 'user', created_at: serverTimestamp() };
+                    await setDoc(doc(db, "usuarios", user.uid), userProfile);
+                } else {
+                    userProfile = snap.data();
                 }
+                document.getElementById('auth-container').classList.add('hidden');
+                if(!userProfile.perfil_completo) document.getElementById('role-selection').classList.remove('hidden');
+                else iniciarApp();
             } else {
                 document.getElementById('auth-container').classList.remove('hidden');
                 document.getElementById('role-selection').classList.add('hidden');
@@ -181,135 +152,115 @@
             document.getElementById('role-selection').classList.add('hidden');
             document.getElementById('app-container').classList.remove('hidden');
             document.getElementById('tenant-label').innerText = `Rede: ${userProfile.tenant_id}`;
-            
-            if(userProfile.role === 'admin') {
-                document.getElementById('tab-admin').classList.remove('hidden');
-            }
+            if(userProfile.role === 'admin') document.getElementById('tab-admin').classList.remove('hidden');
             carregarMissoes();
         }
 
-        window.loginGoogle = () => signInWithPopup(auth, provider).catch(e => {
-            alert("Erro no Login: " + e.message);
-            console.error(e);
-        });
-        
+        window.loginGoogle = () => signInWithPopup(auth, provider);
         window.logout = () => signOut(auth).then(() => location.reload());
-        
         window.definirPerfil = async (tipo) => {
-            const btn = event.currentTarget;
-            btn.innerHTML = "Salvando..."; 
             await updateDoc(doc(db, "usuarios", auth.currentUser.uid), { is_provider: tipo === 'prestador', perfil_completo: true });
             location.reload();
         };
 
         window.switchTab = (tab) => {
             ['atlas', 'ganhar', 'chat', 'admin'].forEach(t => {
-                const sec = document.getElementById(`sec-${t}`);
-                if(sec) sec.classList.toggle('hidden', t !== tab);
-                
+                document.getElementById(`sec-${t}`).classList.toggle('hidden', t !== tab);
                 const btn = document.getElementById(`tab-${t}`);
-                if(btn) {
-                    const isActive = t === tab;
-                    btn.className = isActive 
-                        ? "flex-1 py-4 px-4 text-[10px] font-black border-b-2 border-blue-600 text-blue-600 uppercase italic transition-colors" 
-                        : "flex-1 py-4 px-4 text-[10px] font-black border-b-2 border-transparent text-gray-400 hover:text-gray-600 uppercase italic transition-colors";
-                }
+                if(btn) btn.className = t === tab ? "flex-1 py-4 px-4 text-[10px] font-black border-b-2 border-blue-600 text-blue-600 uppercase italic" : "flex-1 py-4 px-4 text-[10px] font-black border-b-2 border-transparent text-gray-400 uppercase italic";
             });
         };
 
-        // --- SISTEMA ATLAS VIVO (CÂMERA + GPS) ---
+        // --- SISTEMA ATLAS VIVO (UPLOAD REAL) ---
         async function carregarMissoes() {
             const container = document.getElementById('lista-missoes');
-            const loading = document.getElementById('loading-missoes');
-            
             container.innerHTML = "";
-            loading.classList.remove('hidden');
-
+            
             try {
-                // Filtro de Tenant ATIVO (Segurança Fase 1)
-                // Se der erro de índice, o console vai avisar com um link para criar
-                const q = query(
-                    collection(db, "missoes"), 
-                    where("tenant_id", "==", userProfile.tenant_id)
-                );
-                
+                const q = query(collection(db, "missoes"), where("tenant_id", "==", userProfile.tenant_id));
                 const snap = await getDocs(q);
-                let htmlBuffer = "";
-
+                
                 if(snap.empty) {
-                    htmlBuffer = `
-                        <div class="text-center py-12 text-gray-400">
-                            <p class="text-3xl mb-2">🦗</p>
-                            <p class="text-[10px] uppercase font-bold">Sem missões na sua área</p>
-                            <p class="text-[9px]">Aguarde novas demandas na rede ${userProfile.tenant_id}.</p>
-                        </div>
-                    `;
+                    container.innerHTML = `<div class="text-center py-12 text-gray-400"><p>Sem missões.</p></div>`;
                 } else {
                     snap.forEach(d => {
                         const m = d.data();
-                        htmlBuffer += `
-                            <div class="bg-white p-5 rounded-2xl border-l-4 border-blue-900 shadow-sm hover:shadow-md transition group mb-4">
+                        container.innerHTML += `
+                            <div class="bg-white p-5 rounded-2xl border-l-4 border-blue-900 shadow-sm mb-4">
                                 <div class="flex justify-between items-start mb-3">
-                                    <h3 class="font-black text-blue-900 text-sm uppercase italic leading-tight max-w-[70%]">${m.titulo}</h3>
-                                    <span class="bg-green-100 text-green-700 px-2 py-1 rounded-md font-black text-[10px] italic">R$ ${m.recompensa}</span>
+                                    <h3 class="font-black text-blue-900 text-sm uppercase italic">${m.titulo}</h3>
+                                    <span class="bg-green-100 text-green-700 px-2 py-1 rounded-md font-black text-[10px]">R$ ${m.recompensa}</span>
                                 </div>
-                                <p class="text-[10px] text-gray-500 mb-4 leading-relaxed line-clamp-3">${m.descricao}</p>
-                                
-                                <button onclick="iniciarMissao('${d.id}')" class="w-full bg-blue-600 text-white py-3 rounded-xl font-black text-[10px] uppercase italic active:scale-95 transition shadow-lg flex items-center justify-center gap-2 hover:bg-blue-700">
-                                    <span>📸 Capturar Prova</span> 
+                                <p class="text-[10px] text-gray-500 mb-4 line-clamp-2">${m.descricao}</p>
+                                <button onclick="iniciarMissao('${d.id}')" class="w-full bg-blue-600 text-white py-3 rounded-xl font-black text-[10px] uppercase italic active:scale-95 transition flex items-center justify-center gap-2">
+                                    📸 Capturar Prova
                                 </button>
                             </div>`;
                     });
                 }
-                
-                container.innerHTML = htmlBuffer;
             } catch (error) {
-                console.error("Erro ao carregar missões:", error);
-                // Fallback para caso o índice não exista
-                if(error.message.includes("indexes")) {
-                    container.innerHTML = `<p class="text-red-500 text-[10px] text-center p-4">⚠️ Admin: Necessário criar índice no Firebase. Veja o console.</p>`;
-                } else {
-                    container.innerHTML = `<p class="text-red-500 text-[10px] text-center p-4">Erro de conexão. Tente recarregar.</p>`;
-                }
-            } finally {
-                loading.classList.add('hidden');
+                console.error(error);
+                container.innerHTML = `<p class="text-red-500 text-center text-xs">Erro ao carregar (Veja Console)</p>`;
             }
         }
 
-        // Função chamada ao clicar no botão da missão
         window.iniciarMissao = (id) => {
             missaoAtualId = id;
-            console.log("Iniciando missão:", id);
-            
-            // 1. Tenta pegar GPS
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        console.log("📍 GPS Capturado:", position.coords.latitude);
-                        // 2. Se GPS OK, abre input de arquivo (Câmera)
-                        document.getElementById('camera-input').click();
-                    },
-                    (error) => {
-                        alert("⚠️ Erro: Precisamos do seu GPS para validar a missão. Ative a localização.");
-                        console.warn(error);
-                    }
+                    () => document.getElementById('camera-input').click(),
+                    () => alert("Erro: GPS Obrigatório.")
                 );
             } else {
-                alert("Seu dispositivo não suporta GPS. Não é possível realizar missões.");
+                alert("Sem suporte a GPS.");
             }
         };
 
-        // Função chamada quando o usuário tira a foto ou escolhe o arquivo
+        // --- FUNÇÃO DE UPLOAD ATUALIZADA ---
         window.processarFoto = async (input) => {
             if (input.files && input.files[0]) {
                 const file = input.files[0];
-                alert(`✅ FOTO CAPTURADA COM SUCESSO!\n\nNome: ${file.name}\nTamanho: ${(file.size / 1024).toFixed(2)} KB\nMissão ID: ${missaoAtualId}\n\n(Nesta etapa, a foto foi validada. Na próxima, enviaremos para o servidor).`);
+                const loader = document.getElementById('upload-overlay');
                 
-                // Limpa o input para permitir nova foto depois
-                input.value = '';
+                // 1. Mostra Loader
+                loader.classList.remove('hidden');
+
+                try {
+                    // 2. Cria Referência no Storage (Pasta: provas/ID_USUARIO/TIMESTAMP.jpg)
+                    const timestamp = new Date().getTime();
+                    const caminhoArquivo = `provas/${auth.currentUser.uid}/${timestamp}_${file.name}`;
+                    const storageRef = ref(storage, caminhoArquivo);
+
+                    // 3. Faz o Upload
+                    console.log("Iniciando upload para:", caminhoArquivo);
+                    const snapshot = await uploadBytes(storageRef, file);
+                    
+                    // 4. Pega o Link Público
+                    const downloadURL = await getDownloadURL(snapshot.ref);
+                    console.log("Upload concluído. Link:", downloadURL);
+
+                    // 5. Salva Registro no Banco (Atlas Vivo Doc)
+                    await addDoc(collection(db, "mission_assignments"), {
+                        mission_id: missaoAtualId,
+                        profile_id: auth.currentUser.uid,
+                        photo_url: downloadURL,
+                        status: "submitted",
+                        submitted_at: serverTimestamp(),
+                        tenant_id: userProfile.tenant_id
+                    });
+
+                    // 6. Sucesso
+                    loader.classList.add('hidden');
+                    alert("✅ PROVA ENVIADA PARA A NUVEM!\n\nSua missão foi registrada e está em análise.");
+                    input.value = ''; // Limpa input
+
+                } catch (error) {
+                    console.error("Erro no upload:", error);
+                    loader.classList.add('hidden');
+                    alert("❌ Falha no envio: " + error.message + "\n\n(DICA: Verifique se você ATIVOU o Storage no painel do Firebase)");
+                }
             }
         };
-
     </script>
 </body>
 </html>
